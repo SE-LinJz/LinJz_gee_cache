@@ -1,7 +1,7 @@
-package LinJz_gee_cache
+package geecache
 
 import (
-	"LinJz_gee_cache/lru"
+	"LinJz_gee_cache/geecache/lru"
 	"sync"
 )
 

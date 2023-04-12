@@ -1,4 +1,4 @@
-package LinJz_gee_cache
+package geecache
 
 import (
 	"fmt"

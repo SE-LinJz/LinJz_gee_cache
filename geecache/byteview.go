@@ -1,4 +1,4 @@
-package LinJz_gee_cache
+package geecache
 
 // ByteView 只有一个数据成员，b []byte，b将会存储真实的缓存值，选择byte类型是为了能够支持任意的数据类型的存储，例如字符串，图片等。
 // A ByteView holds an immutable view of bytes
