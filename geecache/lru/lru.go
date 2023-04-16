@@ -43,7 +43,7 @@ func (c *Cache) Get(key string) (value Value, ok bool) {
 		kv := ele.Value.(*entry) // 类型转换的第二种，断言 x.( T )，第二个返回值是bool
 		return kv.value, true
 	}
-	return
+	return // 这里是返回了value和ok的默认值
 }
 
 // RemoveOldest 删除功能
