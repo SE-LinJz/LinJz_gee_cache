@@ -95,7 +95,7 @@ func (h *httpGetter) Get(group string, key string) ([]byte, error) {
 		h.baseURL,
 		url.QueryEscape(group),
 		url.QueryEscape(key))
-	res, err := http.Get(u)
+	res, err := http.Get(u) // 调用http.Get()会直接来到ServeHTTP()，因为在main.go中startCacheServer()的http.ListenAndServe(addr[7:], peers)传递了处理函数接口为HTTPPool，而HTTPPool中的处理函数就是ServeHTTP()
 	if err != nil {
 		return nil, err
 	}

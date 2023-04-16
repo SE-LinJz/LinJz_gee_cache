@@ -7,12 +7,22 @@ go build -o server
 ./server -port=8003  &
 ./server -port=8001  &
 
-sleep 2
+sleep 3
+
 echo ">>> start test"
 curl "http://localhost:9999/api?key=Tom" &
-sleep 2
-curl "http://localhost:9999/api?key=Jack" &
-sleep 2
-curl "http://localhost:9999/api?key=Sam" &
-
+curl "http://localhost:9999/api?key=Tom" &
+curl "http://localhost:9999/api?key=Tom" &
+curl "http://localhost:9999/api?key=Tom" &
+curl "http://localhost:9999/api?key=Tom" &
+curl "http://localhost:9999/api?key=Tom" &
+curl "http://localhost:9999/api?key=Tom" &
+curl "http://localhost:9999/api?key=Tom" &
+curl "http://localhost:9999/api?key=Tom" &
+curl "http://localhost:9999/api?key=Tom" &
+curl "http://localhost:9999/api?key=Tom" &
+curl "http://localhost:9999/api?key=Tom" &
+curl "http://localhost:9999/api?key=Tom" &
+curl "http://localhost:9999/api?key=Tom" &
+curl "http://localhost:9999/api?key=Tom" &
 wait

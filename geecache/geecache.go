@@ -1,6 +1,7 @@
 package geecache
 
 import (
+	"LinJz_gee_cache/geecache/singleflight"
 	"fmt"
 	"log"
 	"sync"
@@ -31,6 +32,8 @@ type Group struct {
 	getter    Getter
 	mainCache cache
 	peers     PeerPicker
+	// use singleflight.Group to make sure each key is only fetched once
+	loader *singleflight.Group
 }
 
 var (
@@ -53,6 +56,7 @@ func NewGroup(name string, cacheBytes int64, getter Getter) *Group {
 		mainCache: cache{
 			cacheBytes: cacheBytes,
 		},
+		loader: &singleflight.Group{},
 	}
 	groups[name] = g
 	return g
@@ -95,16 +99,25 @@ func (g *Group) Get(key string) (ByteView, error) {
 }
 
 // 修改load方法，使用PickPeer()方法，使用PickPeer()方法选择节点，若非本地节点，则调用getFromPeer()从远程获取，若是本地节点或失败，则回退到getLocally()。
+// 修改geecache.go中的Group，添加成员变量loader，并更新构建函数NewGroup
+// 修改load函数，将原来的load的逻辑，使用g.loader.Do包裹起来，这样确保了并发场景下针对相同的key，load过程只会调用一次
 func (g *Group) load(key string) (value ByteView, err error) {
-	if g.peers != nil {
-		if peer, ok := g.peers.PickPeer(key); ok {
-			if value, err = g.getFromPeer(peer, key); err == nil { // 注意看，这里使用的是=，而不是:=，再看看方法返回值，定义了返回值名，说明会自动返回值
-				return value, nil
+	// each key is only fetched once(either locally or remotely),regardless of the number of concurrent callers(无论并发呼叫者的数量如何)
+	viewi, err := g.loader.Do(key, func() (any, error) {
+		if g.peers != nil {
+			if peer, ok := g.peers.PickPeer(key); ok {
+				if value, err = g.getFromPeer(peer, key); err == nil { // 注意看，这里使用的是=，而不是:=，再看看方法返回值，定义了返回值名，说明会自动返回值
+					return value, nil
+				}
+				log.Println("[GeeCache] Failed to get from peer", err)
 			}
-			log.Println("[GeeCache] Failed to get from peer", err)
 		}
+		return g.getLocally(key)
+	})
+	if err == nil {
+		return viewi.(ByteView), nil
 	}
-	return g.getLocally(key)
+	return
 }
 
 // 新增getFromPeer方法，使用实现了PeerGetter接口的httpGetter从访问远程节点获取缓存值
@@ -123,7 +136,7 @@ func (g *Group) getLocally(key string) (ByteView, error) {
 		return ByteView{}, err
 	}
 
-	value := ByteView{b: cloneBytes(bytes)} // b是只读的，使用ByteSlice()方法返回一个拷贝，防止缓存值被外部程序修改
+	value := ByteView{b: cloneBytes(bytes)} // b是只读的，使用cloneBytes()方法返回一个拷贝，当防止缓存值被外部程序修改
 	g.populateCache(key, value)
 	return value, nil
 }
